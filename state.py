@@ -147,3 +147,59 @@ def update_tracker_defaults(
 
     save_state(state)
     return tracker
+
+
+def list_trackers() -> Dict[str, Any]:
+    state = load_state()
+    active_name = state.get("active_tracker")
+    trackers = state.get("trackers", {})
+
+    return {
+        "active_tracker": active_name,
+        "trackers": [
+            {
+                "name": name,
+                "csv_path": data.get("csv_path"),
+                "default_currency": data.get("default_currency"),
+                "default_city": data.get("default_city"),
+                "is_active": name == active_name,
+            }
+            for name, data in trackers.items()
+        ],
+    }
+
+
+def delete_tracker(tracker_name: str, delete_file: bool = True) -> Dict[str, Any]:
+    tracker_name = tracker_name.strip()
+    if not tracker_name:
+        raise ValueError("tracker_name cannot be empty")
+
+    state = load_state()
+    trackers = state.get("trackers", {})
+
+    if tracker_name not in trackers:
+        raise ValueError(f"Tracker '{tracker_name}' not found.")
+
+    tracker = trackers[tracker_name]
+    csv_path = tracker.get("csv_path")
+    was_active = state.get("active_tracker") == tracker_name
+
+    del trackers[tracker_name]
+
+    if was_active:
+        state["active_tracker"] = None
+
+    save_state(state)
+
+    deleted_file = False
+    if delete_file and csv_path:
+        path = Path(csv_path)
+        if path.exists():
+            path.unlink()
+            deleted_file = True
+
+    return {
+        "deleted_tracker": tracker_name,
+        "deleted_file": deleted_file,
+        "was_active": was_active,
+    }
