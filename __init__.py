@@ -4,6 +4,7 @@ from .commands import (
     set_city,
     list_trackers_command,
     delete_tracker_command,
+    handle_expense,
 )
 
 def register(ctx):
@@ -31,4 +32,9 @@ def register(ctx):
         "delete-tracker",
         handler=delete_tracker_command,
         description="Delete a tracker and its CSV file",
+    )
+    ctx.register_command(
+        "expense", 
+        handler=handle_expense,
+        description="Log an expense"
     )

@@ -1,4 +1,4 @@
-name: expense-tracker
+name: expense_tracker
 version: 0.1.0
 description: Expense tracking plugin for Hermes
 main: __init__.py

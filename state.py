@@ -1,16 +1,16 @@
 from __future__ import annotations
-
-import os
+from .csv_writer import ensure_csv_exists
 from pathlib import Path
 from typing import Any, Dict, Optional
 import json
+import os
 
 def resolve_data_dir() -> Path:
     override = os.getenv("EXPENSE_TRACKER_DATA_DIR")
     if override:
         return Path(override).expanduser()
 
-    return Path.home() / ".hermes" / "plugins-data" / "expense-tracker"
+    return Path.home() / ".hermes" / "plugins-data" / "expense_tracker"
 
 DATA_DIR = resolve_data_dir()
 OUTPUT_DIR = DATA_DIR / "output"
@@ -78,17 +78,13 @@ def create_tracker_if_missing(tracker_name: str) -> Dict[str, Any]:
     if tracker_name not in trackers:
         csv_path = _tracker_csv_path(tracker_name)
 
+        ensure_csv_exists(csv_path)
+
         trackers[tracker_name] = {
             "csv_path": str(csv_path),
             "default_currency": None,
             "default_city": None,
         }
-
-        if not csv_path.exists():
-            csv_path.write_text(
-                "date,amount,currency,category,city,description\n",
-                encoding="utf-8",
-            )
 
         save_state(state)
 

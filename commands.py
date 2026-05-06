@@ -4,7 +4,11 @@ from .state import (
     get_active_tracker_name,
     list_trackers,
     delete_tracker,
+    get_active_tracker,
 )
+from .parser import parse_expense_command
+from .csv_writer import append_expense_row
+
 
 def set_tracker(raw_args: str) -> str:
     tracker_name = raw_args.strip()
@@ -89,3 +93,42 @@ def delete_tracker_command(raw_args: str) -> str:
         return msg
     except Exception as e:
         return f"Error: {e}"
+
+
+def handle_expense(raw_args: str) -> str:
+    raw_args = raw_args.strip()
+    if not raw_args:
+        return (
+            "Usage: /expense <name> - <cost> [currency] - [#tags] - [city] - [cost_sgd]"
+        )
+
+    try:
+        tracker = get_active_tracker()
+        tracker_name = get_active_tracker_name()
+
+        parsed = parse_expense_command(
+            raw_args,
+            default_currency=tracker.get("default_currency", ""),
+            default_city=tracker.get("default_city", ""),
+        )
+
+        append_expense_row(tracker["csv_path"], parsed)
+
+        parts = [
+            f"Saved expense to tracker '{tracker_name}':",
+            f"- name: {parsed['name']}",
+            f"- cost: {parsed['cost']} {parsed['currency']}",
+        ]
+
+        if parsed.get("tags"):
+            parts.append(f"- tags: {parsed['tags']}")
+        if parsed.get("city"):
+            parts.append(f"- city: {parsed['city']}")
+        if parsed.get("cost_sgd"):
+            parts.append(f"- cost_sgd: {parsed['cost_sgd']}")
+
+        return "\n".join(parts)
+
+    except Exception as e:
+        return f"Error: {e}"
+
